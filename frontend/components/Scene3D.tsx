@@ -8,14 +8,32 @@ import * as THREE from "three";
 
 function Model() {
     // Load the model from the public folder
-    // The user must place a file named 'scene.gltf' or 'scene.glb' in frontend/public
-    const { scene } = useGLTF("/scene.gltf");
+    const { scene } = useGLTF("/scene.glb");
+
+    // Apply Holographic Material to the model
+    useMemo(() => {
+        scene.traverse((child: THREE.Object3D) => {
+            if ((child as THREE.Mesh).isMesh) {
+                const mesh = child as THREE.Mesh;
+                mesh.material = new THREE.MeshStandardMaterial({
+                    color: "#00ffff",
+                    emissive: "#0088ff",
+                    emissiveIntensity: 0.5,
+                    roughness: 0.2,
+                    metalness: 0.8,
+                    transparent: true,
+                    opacity: 0.9,
+                    wireframe: false, // Set to true for a wireframe look
+                });
+            }
+        });
+    }, [scene]);
 
     return (
         <primitive
             object={scene}
             scale={2}
-            position={[0, -1, 0]}
+            position={[0, -1.5, 0]}
             rotation={[0, Math.PI / 5, 0]}
         />
     );
