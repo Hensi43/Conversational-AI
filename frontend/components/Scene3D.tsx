@@ -13,28 +13,6 @@ function Model() {
     // Clone the scene to avoid mutating the cached original
     const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-    // Create a single shared material for better performance
-    const holographicMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-        color: "#00ffff",
-        emissive: "#0088ff",
-        emissiveIntensity: 0.5,
-        roughness: 0.2,
-        metalness: 0.8,
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide,
-    }), []);
-
-    // Apply Holographic Material to the model
-    useMemo(() => {
-        clonedScene.traverse((child: THREE.Object3D) => {
-            if ((child as THREE.Mesh).isMesh) {
-                const mesh = child as THREE.Mesh;
-                mesh.material = holographicMaterial;
-            }
-        });
-    }, [clonedScene, holographicMaterial]);
-
     return (
         <primitive
             object={clonedScene}
@@ -45,82 +23,7 @@ function Model() {
     );
 }
 
-function BackgroundParticles() {
-    const { viewport, mouse } = useThree();
-    const count = 200; // Reduced from 2000 for performance
-    const mesh = useRef<THREE.InstancedMesh>(null);
-    const dummy = useMemo(() => new THREE.Object3D(), []);
-
-    // Initialize particles with random positions
-    const particles = useMemo(() => {
-        const temp = [];
-        for (let i = 0; i < count; i++) {
-            const x = (Math.random() - 0.5) * 20; // Spread across width
-            const y = (Math.random() - 0.5) * 20; // Spread across height
-            const z = (Math.random() - 0.5) * 10 - 5; // Depth
-            temp.push({ x, y, z, ox: x, oy: y, oz: z, vx: 0, vy: 0, vz: 0 });
-        }
-        return temp;
-    }, [count]);
-
-    useFrame(() => {
-        if (!mesh.current) return;
-
-        // Convert normalized mouse coordinates (-1 to 1) to world coordinates (approx)
-        const mouseX = (mouse.x * viewport.width) / 2;
-        const mouseY = (mouse.y * viewport.height) / 2;
-
-        particles.forEach((particle, i) => {
-            // Calculate distance to mouse
-            const dx = mouseX - particle.x;
-            const dy = mouseY - particle.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const repulsionRadius = 3; // Radius of influence
-
-            if (dist < repulsionRadius) {
-                // Repulsion force
-                const force = (repulsionRadius - dist) / repulsionRadius;
-                const angle = Math.atan2(dy, dx);
-
-                // Push away
-                particle.vx -= Math.cos(angle) * force * 0.1;
-                particle.vy -= Math.sin(angle) * force * 0.1;
-            }
-
-            // Apply velocity
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-
-            // Friction / Return to original position (optional, or just drift)
-            // Let's make them drift back slowly to original position for "stillness"
-            particle.x += (particle.ox - particle.x) * 0.02;
-            particle.y += (particle.oy - particle.y) * 0.02;
-
-            // Dampen velocity
-            particle.vx *= 0.9;
-            particle.vy *= 0.9;
-
-            dummy.position.set(particle.x, particle.y, particle.z);
-
-            // Scale down slightly
-            const s = 0.5;
-            dummy.scale.set(s, s, s);
-            dummy.updateMatrix();
-
-            if (mesh.current) {
-                mesh.current.setMatrixAt(i, dummy.matrix);
-            }
-        });
-        mesh.current.instanceMatrix.needsUpdate = true;
-    });
-
-    return (
-        <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
-            <dodecahedronGeometry args={[0.05, 0]} />
-            <meshPhongMaterial color="#00ffff" emissive="#0088ff" transparent opacity={0.6} />
-        </instancedMesh>
-    );
-}
+// function BackgroundParticles() { ... } (Commented out for debugging)
 
 export default function Scene3D() {
     return (
@@ -131,9 +34,8 @@ export default function Scene3D() {
                 <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff00ff" />
 
                 <Model />
-                <BackgroundParticles />
-                {/* Reduced background stars since we have interactive particles */}
-                <Stars radius={100} depth={50} count={500} factor={4} saturation={0} fade speed={0.5} />
+                {/* <BackgroundParticles /> */}
+                {/* <Stars radius={100} depth={50} count={500} factor={4} saturation={0} fade speed={0.5} /> */}
 
                 <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
             </Canvas>
