@@ -1,72 +1,40 @@
 
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Stars, useGLTF } from "@react-three/drei";
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 
-function ParticleHead() {
-    const groupRef = useRef<THREE.Group>(null);
-
-    useFrame((state) => {
-        if (groupRef.current) {
-            // Gentle floating animation
-            groupRef.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.1;
-            // Slow rotation
-            groupRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.2) * 0.1;
-        }
-    });
-
-    // Create geometries for head, neck, and shoulders
-    const headGeo = useMemo(() => new THREE.SphereGeometry(1, 64, 64), []);
-    const neckGeo = useMemo(() => new THREE.CylinderGeometry(0.4, 0.4, 1, 32), []);
-    const shouldersGeo = useMemo(() => new THREE.SphereGeometry(1.5, 64, 32), []);
+function Model() {
+    // Load the model from the public folder
+    // The user must place a file named 'scene.gltf' or 'scene.glb' in frontend/public
+    const { scene } = useGLTF("/scene.gltf");
 
     return (
-        <group ref={groupRef} position={[0, 0.5, 0]}>
-            {/* Head */}
-            <points position={[0, 1.2, 0]}>
-                <primitive object={headGeo} />
-                <pointsMaterial color="#00ffff" size={0.015} transparent opacity={0.8} sizeAttenuation />
-            </points>
-
-            {/* Neck */}
-            <points position={[0, 0.2, 0]}>
-                <primitive object={neckGeo} />
-                <pointsMaterial color="#00ffff" size={0.015} transparent opacity={0.6} sizeAttenuation />
-            </points>
-
-            {/* Shoulders (Approximated with a scaled sphere) */}
-            <points position={[0, -0.8, 0]} scale={[2, 0.8, 1]}>
-                <primitive object={shouldersGeo} />
-                <pointsMaterial color="#00ffff" size={0.015} transparent opacity={0.5} sizeAttenuation />
-            </points>
-
-            {/* Inner Glow for Head */}
-            <mesh position={[0, 1.2, 0]}>
-                <sphereGeometry args={[0.95, 32, 32]} />
-                <meshBasicMaterial color="#0088ff" transparent opacity={0.1} />
-            </mesh>
-        </group>
+        <primitive
+            object={scene}
+            scale={2}
+            position={[0, -1, 0]}
+            rotation={[0, Math.PI / 5, 0]}
+        />
     );
 }
 
 function BackgroundParticles() {
+    const { viewport, mouse } = useThree();
     const count = 2000;
     const mesh = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
+    // Initialize particles with random positions
     const particles = useMemo(() => {
         const temp = [];
         for (let i = 0; i < count; i++) {
-            const t = Math.random() * 100;
-            const factor = 20 + Math.random() * 100;
-            const speed = 0.01 + Math.random() / 200;
-            const xFactor = -50 + Math.random() * 100;
-            const yFactor = -50 + Math.random() * 100;
-            const zFactor = -50 + Math.random() * 100;
-            temp.push({ t, factor, speed, xFactor, yFactor, zFactor, mx: 0, my: 0 });
+            const x = (Math.random() - 0.5) * 20; // Spread across width
+            const y = (Math.random() - 0.5) * 20; // Spread across height
+            const z = (Math.random() - 0.5) * 10 - 5; // Depth
+            temp.push({ x, y, z, ox: x, oy: y, oz: z, vx: 0, vy: 0, vz: 0 });
         }
         return temp;
     }, [count]);
@@ -74,20 +42,45 @@ function BackgroundParticles() {
     useFrame(() => {
         if (!mesh.current) return;
 
+        // Convert normalized mouse coordinates (-1 to 1) to world coordinates (approx)
+        const mouseX = (mouse.x * viewport.width) / 2;
+        const mouseY = (mouse.y * viewport.height) / 2;
+
         particles.forEach((particle, i) => {
-            let { t, factor, speed, xFactor, yFactor, zFactor } = particle;
-            t = particle.t += speed / 3; // Slower, ambient movement
-            const s = Math.cos(t);
+            // Calculate distance to mouse
+            const dx = mouseX - particle.x;
+            const dy = mouseY - particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const repulsionRadius = 3; // Radius of influence
 
-            // No mouse interaction, just ambient floating
-            dummy.position.set(
-                (particle.mx / 10) + Math.cos(t) + Math.sin(t * 1) / 10 + xFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 1) * factor) / 10,
-                (particle.my / 10) + Math.sin(t) + Math.cos(t * 2) / 10 + yFactor + Math.sin((t / 10) * factor) + (Math.cos(t * 2) * factor) / 10,
-                (particle.my / 10) + Math.cos(t) + Math.sin(t * 3) / 10 + zFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 3) * factor) / 10
-            );
+            if (dist < repulsionRadius) {
+                // Repulsion force
+                const force = (repulsionRadius - dist) / repulsionRadius;
+                const angle = Math.atan2(dy, dx);
 
+                // Push away
+                particle.vx -= Math.cos(angle) * force * 0.1;
+                particle.vy -= Math.sin(angle) * force * 0.1;
+            }
+
+            // Apply velocity
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+
+            // Friction / Return to original position (optional, or just drift)
+            // Let's make them drift back slowly to original position for "stillness"
+            particle.x += (particle.ox - particle.x) * 0.02;
+            particle.y += (particle.oy - particle.y) * 0.02;
+
+            // Dampen velocity
+            particle.vx *= 0.9;
+            particle.vy *= 0.9;
+
+            dummy.position.set(particle.x, particle.y, particle.z);
+
+            // Scale down slightly
+            const s = 0.5;
             dummy.scale.set(s, s, s);
-            dummy.rotation.set(s * 5, s * 5, s * 5);
             dummy.updateMatrix();
 
             if (mesh.current) {
@@ -100,7 +93,7 @@ function BackgroundParticles() {
     return (
         <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
             <dodecahedronGeometry args={[0.05, 0]} />
-            <meshPhongMaterial color="#00ffff" emissive="#0088ff" transparent opacity={0.4} />
+            <meshPhongMaterial color="#00ffff" emissive="#0088ff" transparent opacity={0.6} />
         </instancedMesh>
     );
 }
@@ -113,9 +106,10 @@ export default function Scene3D() {
                 <pointLight position={[10, 10, 10]} intensity={1} color="#00ffff" />
                 <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff00ff" />
 
-                <ParticleHead />
+                <Model />
                 <BackgroundParticles />
-                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+                {/* Reduced background stars since we have interactive particles */}
+                <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={0.5} />
 
                 <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
             </Canvas>
