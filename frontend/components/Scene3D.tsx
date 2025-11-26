@@ -8,7 +8,7 @@ import * as THREE from "three";
 
 function Model() {
     // Load the model from the public folder
-    const { scene } = useGLTF("/scene.glb");
+    const { scene } = useGLTF("/scene.gltf");
 
     // Apply Holographic Material to the model
     useMemo(() => {
