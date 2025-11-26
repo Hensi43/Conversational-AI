@@ -16,7 +16,8 @@ export default function UploadPage() {
 
   async function fetchUploads() {
     try {
-      const res = await axios.get("http://127.0.0.1:8001/api/uploads");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const res = await axios.get(`${apiUrl}/api/uploads`);
       if (res.data.uploads) {
         setUploads(res.data.uploads);
       }
@@ -35,7 +36,8 @@ export default function UploadPage() {
     formData.append("file", file);
 
     try {
-      await axios.post("http://127.0.0.1:8001/api/upload", formData, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      await axios.post(`${apiUrl}/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -55,7 +57,8 @@ export default function UploadPage() {
     if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
 
     try {
-      await axios.delete(`http://127.0.0.1:8001/api/upload/${encodeURIComponent(filename)}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      await axios.delete(`${apiUrl}/api/upload/${encodeURIComponent(filename)}`);
       fetchUploads(); // Refresh list
     } catch (error) {
       console.error("Delete failed:", error);
@@ -80,7 +83,7 @@ export default function UploadPage() {
         <div className="hidden md:flex items-center space-x-8 text-gray-400 text-sm font-medium tracking-wide">
           <a href="/" className="hover:text-cyan-400 transition-colors duration-300">Home</a>
           <a href="/upload" className="text-cyan-400 transition-colors duration-300">Upload</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
+          <a href="/quiz" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
           <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Profile</a>
         </div>
       </nav>

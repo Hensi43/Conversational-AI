@@ -21,7 +21,8 @@ export default function Home() {
     setInput("");
 
     try {
-      const res = await axios.post("http://127.0.0.1:8001/api/chat", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const res = await axios.post(`${apiUrl}/api/chat`, {
         query: currentInput,
       });
 
@@ -49,9 +50,9 @@ export default function Home() {
           CHATBOT
         </div>
         <div className="hidden md:flex items-center space-x-8 text-gray-400 text-sm font-medium tracking-wide">
-          <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Home</a>
+          <a href="/" className="hover:text-cyan-400 transition-colors duration-300">Home</a>
           <a href="/upload" className="hover:text-cyan-400 transition-colors duration-300">Upload</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
+          <a href="/quiz" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
           <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Profile</a>
         </div>
       </nav>

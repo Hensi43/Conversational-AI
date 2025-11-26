@@ -18,7 +18,8 @@ export default function QuizPage() {
     setAnswers({});
 
     try {
-      const res = await axios.post("http://127.0.0.1:8001/api/quiz", { topic });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const res = await axios.post(`${apiUrl}/api/quiz`, { topic });
       if (res.data.quiz && Array.isArray(res.data.quiz)) {
         setQuiz(res.data.quiz);
       }
