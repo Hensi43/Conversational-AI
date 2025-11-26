@@ -10,28 +10,34 @@ function Model() {
     // Load the model from the public folder
     const { scene } = useGLTF("/scene.gltf");
 
+    // Clone the scene to avoid mutating the cached original
+    const clonedScene = useMemo(() => scene.clone(), [scene]);
+
+    // Create a single shared material for better performance
+    const holographicMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+        color: "#00ffff",
+        emissive: "#0088ff",
+        emissiveIntensity: 0.5,
+        roughness: 0.2,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+    }), []);
+
     // Apply Holographic Material to the model
     useMemo(() => {
-        scene.traverse((child: THREE.Object3D) => {
+        clonedScene.traverse((child: THREE.Object3D) => {
             if ((child as THREE.Mesh).isMesh) {
                 const mesh = child as THREE.Mesh;
-                mesh.material = new THREE.MeshStandardMaterial({
-                    color: "#00ffff",
-                    emissive: "#0088ff",
-                    emissiveIntensity: 0.5,
-                    roughness: 0.2,
-                    metalness: 0.8,
-                    transparent: true,
-                    opacity: 0.9,
-                    wireframe: false, // Set to true for a wireframe look
-                });
+                mesh.material = holographicMaterial;
             }
         });
-    }, [scene]);
+    }, [clonedScene, holographicMaterial]);
 
     return (
         <primitive
-            object={scene}
+            object={clonedScene}
             scale={2}
             position={[0, -1.5, 0]}
             rotation={[0, Math.PI / 5, 0]}
@@ -41,7 +47,7 @@ function Model() {
 
 function BackgroundParticles() {
     const { viewport, mouse } = useThree();
-    const count = 2000;
+    const count = 200; // Reduced from 2000 for performance
     const mesh = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
@@ -127,7 +133,7 @@ export default function Scene3D() {
                 <Model />
                 <BackgroundParticles />
                 {/* Reduced background stars since we have interactive particles */}
-                <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={0.5} />
+                <Stars radius={100} depth={50} count={500} factor={4} saturation={0} fade speed={0.5} />
 
                 <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
             </Canvas>
