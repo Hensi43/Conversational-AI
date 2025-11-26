@@ -3,6 +3,9 @@
 import { useState } from "react";
 import axios from "axios";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -38,11 +41,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#020617] text-white relative overflow-hidden font-sans selection:bg-cyan-500/30">
 
       {/* Background Effects */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-900/20 rounded-full blur-[120px]" />
-        <div className="absolute top-[20%] right-[20%] w-[20%] h-[20%] bg-indigo-900/20 rounded-full blur-[100px]" />
-      </div>
+      {/* Background Effects - Handled by Scene3D */}
 
       {/* Navbar */}
       <nav className="relative z-20 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
@@ -61,15 +60,8 @@ export default function Home() {
       <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4">
 
         {/* Avatar Section */}
-        <div className="relative w-64 h-64 md:w-96 md:h-96 mb-8 animate-pulse-slow">
-          <div className="absolute inset-0 bg-cyan-500/10 rounded-full blur-[60px]" />
-          <Image
-            src="/avatar.png"
-            alt="AI Avatar"
-            fill
-            className="object-contain drop-shadow-[0_0_30px_rgba(0,255,255,0.3)]"
-            priority
-          />
+        <div className="relative w-full h-[500px] mb-8">
+          <Scene3D />
         </div>
 
         {/* Chat Interface */}

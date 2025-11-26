@@ -32,7 +32,7 @@ async def upload_file(file: UploadFile = File(...)):
             
             text = f"Image Filename: {file.filename}\nDescription: {description}"
         else:
-            text = content.decode("utf-8")
+            text = f"Filename: {file.filename}\nContent:\n{content.decode('utf-8')}"
         
         # Save file to disk
         import os
