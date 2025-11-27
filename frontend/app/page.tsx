@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { Navbar } from "@/components/Navbar";
 
 const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
@@ -38,26 +39,17 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white relative overflow-hidden font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden font-sans selection:bg-cyan-500/30 transition-colors duration-300">
 
       {/* Background Effects */}
       {/* Background Effects - Handled by Scene3D */}
 
       {/* Navbar */}
-      <nav className="relative z-20 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-          CHATBOT
-        </div>
-        <div className="hidden md:flex items-center space-x-8 text-gray-400 text-sm font-medium tracking-wide">
-          <a href="/" className="hover:text-cyan-400 transition-colors duration-300">Home</a>
-          <a href="/upload" className="hover:text-cyan-400 transition-colors duration-300">Upload</a>
-          <a href="/quiz" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Profile</a>
-        </div>
-      </nav>
+      {/* Navbar */}
+      <Navbar />
 
       {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4">
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 pb-20">
 
         {/* Avatar Section */}
         <div className="relative w-full h-[500px] mb-8">
@@ -78,8 +70,8 @@ export default function Home() {
                   className={`
                     max-w-[80%] px-6 py-3 rounded-2xl text-base backdrop-blur-md border
                     ${msg.role === "user"
-                      ? "bg-cyan-950/40 border-cyan-500/30 text-cyan-50 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                      : "bg-slate-900/60 border-slate-700/50 text-slate-200 shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+                      ? "bg-cyan-100/80 border-cyan-200 text-cyan-900 shadow-[0_4px_20px_rgba(6,182,212,0.2)] dark:bg-cyan-950/60 dark:border-cyan-500/40 dark:text-cyan-50"
+                      : "bg-white/90 border-slate-300 text-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.15)] dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-200"
                     }
                   `}
                 >
@@ -90,28 +82,33 @@ export default function Home() {
           </div>
 
           {/* Input Area */}
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full opacity-30 group-hover:opacity-50 transition duration-500 blur"></div>
-            <div className="relative flex items-center bg-slate-950/80 backdrop-blur-xl rounded-full border border-slate-800 p-1.5">
+          <div className="relative group w-full">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full opacity-40 group-hover:opacity-60 transition duration-500 blur-sm"></div>
+            <div className="relative flex items-center bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl rounded-full border border-slate-300 dark:border-slate-700 p-1.5 shadow-xl dark:shadow-2xl">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="Type a message..."
-                className="flex-1 bg-transparent text-white placeholder-slate-500 px-6 py-3 outline-none rounded-full"
+                className="flex-1 min-w-0 bg-transparent text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 px-4 md:px-6 py-3 outline-none rounded-full text-sm md:text-base"
               />
               <button
                 onClick={sendMessage}
                 className="
-                  px-8 py-3 
+                  px-5 md:px-8 py-3 
                   bg-gradient-to-r from-cyan-600 to-blue-600 
                   hover:from-cyan-500 hover:to-blue-500
-                  text-white font-medium tracking-wide
+                  text-white font-semibold tracking-wide
                   rounded-full 
-                  transition-all duration-300
-                  shadow-[0_0_20px_rgba(6,182,212,0.4)]
-                  hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]
+                  transition-all duration-200
+                  shadow-[0_4px_0_rgb(6,130,180)]
+                  hover:shadow-[0_5px_0_rgb(6,130,180)]
+                  hover:-translate-y-0.5
+                  active:shadow-[0_0_0_rgb(6,130,180)]
+                  active:translate-y-1
+                  text-sm md:text-base
+                  whitespace-nowrap
                 "
               >
                 Send
@@ -120,7 +117,7 @@ export default function Home() {
           </div>
 
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }

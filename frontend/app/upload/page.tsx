@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
+import { Navbar } from "@/components/Navbar";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -67,7 +68,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white relative overflow-hidden font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden font-sans selection:bg-cyan-500/30 transition-colors duration-300">
 
       {/* Background Effects */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -76,17 +77,8 @@ export default function UploadPage() {
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-20 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-          CHATBOT
-        </div>
-        <div className="hidden md:flex items-center space-x-8 text-gray-400 text-sm font-medium tracking-wide">
-          <a href="/" className="hover:text-cyan-400 transition-colors duration-300">Home</a>
-          <a href="/upload" className="text-cyan-400 transition-colors duration-300">Upload</a>
-          <a href="/quiz" className="hover:text-cyan-400 transition-colors duration-300">Quiz</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Profile</a>
-        </div>
-      </nav>
+      {/* Navbar */}
+      <Navbar />
 
       {/* Main Content */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4">

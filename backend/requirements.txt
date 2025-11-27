@@ -7,3 +7,5 @@ groq
 pydantic
 pypdf
 python-multipart
+pyjwt
+passlib[bcrypt]
