@@ -17,7 +17,7 @@ export default function UploadPage() {
 
   async function fetchUploads() {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       const res = await axios.get(`${apiUrl}/api/uploads`);
       if (res.data.uploads) {
         setUploads(res.data.uploads);
@@ -37,7 +37,7 @@ export default function UploadPage() {
     formData.append("file", file);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       await axios.post(`${apiUrl}/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -58,7 +58,7 @@ export default function UploadPage() {
     if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       await axios.delete(`${apiUrl}/api/upload/${encodeURIComponent(filename)}`);
       fetchUploads(); // Refresh list
     } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import { supabase } from "@/lib/supabase";
 
 export default function Auth({ onLogin }: { onLogin: (token: string, username: string) => void }) {
     const [isLogin, setIsLogin] = useState(true);
@@ -16,29 +16,35 @@ export default function Auth({ onLogin }: { onLogin: (token: string, username: s
         setLoading(true);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
-            console.log("Auth API URL:", apiUrl);
-
             if (isLogin) {
-                const res = await axios.post(`${apiUrl}/api/login`, { username, password });
-                onLogin(res.data.access_token, username);
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: username, // Using username field as email for now, or we should change input type
+                    password: password,
+                });
+
+                if (error) throw error;
+                if (data.session) {
+                    onLogin(data.session.access_token, data.user.email || username);
+                }
             } else {
-                await axios.post(`${apiUrl}/api/register`, { username, password });
-                // Auto login after register or switch to login tab
+                const { data, error } = await supabase.auth.signUp({
+                    email: username,
+                    password: password,
+                    options: {
+                        data: {
+                            username: username.split("@")[0], // Store part of email as username
+                        }
+                    }
+                });
+
+                if (error) throw error;
+                // Auto login logic depends on email confirmation settings
                 setIsLogin(true);
-                setError("Registration successful! Please login.");
+                setError("Registration successful! Check your email to confirm.");
             }
         } catch (err: any) {
             console.error("Auth Error:", err);
-            if (err.response) {
-                console.error("Response Data:", err.response.data);
-                setError(err.response.data.detail || `Server Error: ${err.response.status}`);
-            } else if (err.request) {
-                console.error("No Response:", err.request);
-                setError("Network Error: No response from server. Check if backend is running.");
-            } else {
-                setError(`Error: ${err.message}`);
-            }
+            setError(err.message || "Authentication failed");
         } finally {
             setLoading(false);
         }
@@ -78,13 +84,13 @@ export default function Auth({ onLogin }: { onLogin: (token: string, username: s
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-xs uppercase tracking-widest text-cyan-500/70 mb-2">Username</label>
+                        <label className="block text-xs uppercase tracking-widest text-cyan-500/70 mb-2">Email</label>
                         <input
-                            type="text"
+                            type="email"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all duration-300"
-                            placeholder="Enter codename..."
+                            placeholder="Enter email address..."
                             required
                         />
                     </div>

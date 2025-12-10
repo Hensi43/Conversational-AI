@@ -2,43 +2,49 @@
 
 import { useState, useEffect } from "react";
 import Auth from "@/components/Auth";
-import axios from "axios";
 import { Navbar } from "@/components/Navbar";
+
+import { supabase } from "@/lib/supabase";
 
 export default function Profile() {
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<string | null>(null);
 
     useEffect(() => {
-        // Check local storage on load
-        const storedToken = localStorage.getItem("token");
-        if (storedToken) {
-            setToken(storedToken);
-            fetchUser(storedToken);
-        }
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                setToken(session.access_token);
+                setUser(session.user.user_metadata.username || session.user.email?.split("@")[0] || "User");
+            }
+        });
+
+        // Listen for changes
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                setToken(session.access_token);
+                setUser(session.user.user_metadata.username || session.user.email?.split("@")[0] || "User");
+            } else {
+                setToken(null);
+                setUser(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const fetchUser = async (authToken: string) => {
-        try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
-            const res = await axios.get(`${apiUrl}/api/me`, {
-                headers: { Authorization: `Bearer ${authToken}` },
-            });
-            setUser(res.data.username);
-        } catch (error) {
-            console.error("Failed to fetch user", error);
-            logout();
-        }
-    };
-
     const login = (newToken: string, username: string) => {
-        localStorage.setItem("token", newToken);
+        // This is called by Auth component, but onAuthStateChange handles it too.
+        // We can keep it to force update or just let the subscription handle it.
+        // For smoother UX, we update state immediately.
         setToken(newToken);
         setUser(username);
     };
 
-    const logout = () => {
-        localStorage.removeItem("token");
+    const logout = async () => {
+        await supabase.auth.signOut();
         setToken(null);
         setUser(null);
     };

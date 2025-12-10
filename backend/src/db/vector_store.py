@@ -1,61 +1,76 @@
+import json
 import numpy as np
-
-DOCUMENTS = []
-EMBEDDINGS = []
-METADATA = []
+from src.db.supabase import supabase
 
 def add_document(text, embedding, metadata=None):
-    DOCUMENTS.append(text)
-    EMBEDDINGS.append(np.array(embedding))
-    METADATA.append(metadata or {})
+    # Convert numpy array to list for Supabase
+    embedding_list = np.array(embedding, dtype=np.float32).tolist()
+    
+    data = {
+        "content": text,
+        "metadata": metadata or {},
+        "embedding": embedding_list
+    }
+    
+    response = supabase.table("documents").insert(data).execute()
+    return response
 
 def get_all_uploads():
-    # Return unique uploads based on filename
+    # Fetch distinct filenames from metadata in documents table
+    # This is less efficient in NoSQL/JSONB style, but workable.
+    # We fetch all (limit to some number) and aggregate in python if needed, 
+    # or better, use a specific RPC or just list all for now.
+    
+    # For now, let's just fetch the last 50 documents
+    response = supabase.table("documents").select("metadata, created_at").order("created_at", desc=True).limit(50).execute()
+    
+    # Setup a set to track unique filenames
     seen_files = set()
     uploads = []
-    # Iterate in reverse to get most recent first
-    for meta in reversed(METADATA):
-        if meta and "filename" in meta and meta["filename"] not in seen_files:
-            seen_files.add(meta["filename"])
+    
+    for row in response.data:
+        meta = row.get("metadata", {})
+        filename = meta.get("filename")
+        if filename and filename not in seen_files:
+            seen_files.add(filename)
+            # Add timestamp if not in metadata but in row
+            if "created_at" in row and "created_at" not in meta:
+                meta["created_at"] = row["created_at"]
             uploads.append(meta)
+            
     return uploads
 
 def delete_document(filename: str):
-    global DOCUMENTS, EMBEDDINGS, METADATA
+    # This is tricky with JSONB. We need to delete where metadata->>'filename' = filename
+    # Supabase-py / postgrest supports filter on json columns
     
-    new_docs = []
-    new_embs = []
-    new_meta = []
+    response = supabase.table("documents").delete().eq("metadata->>filename", filename).execute()
     
-    for i, meta in enumerate(METADATA):
-        if meta.get("filename") != filename:
-            new_docs.append(DOCUMENTS[i])
-            new_embs.append(EMBEDDINGS[i])
-            new_meta.append(meta)
-            
-    DOCUMENTS = new_docs
-    EMBEDDINGS = new_embs
-    METADATA = new_meta
+    # Also delete from storage if possible, but the function signature just returns bool
+    # We will handle storage deletion in the API layer or here if we want.
+    # For this function, we just clear the DB records.
     return True
-
-def cosine_similarity(a, b):
-    a, b = np.array(a), np.array(b)
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-def search(query_embedding, top_k=5):
-    if not EMBEDDINGS:
-        return []
-
-    scores = []
-    for i, emb in enumerate(EMBEDDINGS):
-        sim = cosine_similarity(query_embedding, emb)
-        scores.append((sim, DOCUMENTS[i]))
-
-    scores.sort(reverse=True, key=lambda x: x[0])
-    return [doc for _, doc in scores[:top_k]]
 
 def query_documents(query_text: str, top_k=5):
     from src.core.embeddings import get_embedding
+    
     query_emb = get_embedding(query_text)
-    results = search(query_emb, top_k)
-    return "\n\n".join(results)
+    
+    # Call the RPC function 'match_documents'
+    params = {
+        "query_embedding": query_emb,
+        "match_threshold": 0.5, # Adjust as needed
+        "match_count": top_k
+    }
+    
+    try:
+        response = supabase.rpc("match_documents", params).execute()
+        
+        results = []
+        for match in response.data:
+            results.append(match.get("content", ""))
+            
+        return "\n\n".join(results)
+    except Exception as e:
+        print(f"Error querying documents: {e}")
+        return ""

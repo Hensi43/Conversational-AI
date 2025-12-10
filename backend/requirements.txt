@@ -9,3 +9,5 @@ pypdf
 python-multipart
 pyjwt
 passlib[bcrypt]
+supabase
+python-multipart

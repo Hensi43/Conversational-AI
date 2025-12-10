@@ -25,7 +25,7 @@ export default function Home() {
     setInput("");
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       const res = await axios.post(`${apiUrl}/api/chat`, {
         query: currentInput,
       });
