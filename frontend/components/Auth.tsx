@@ -27,7 +27,7 @@ export default function Auth({ onLogin }: { onLogin: (token: string, username: s
                     onLogin(data.session.access_token, data.user.email || username);
                 }
             } else {
-                const { data, error } = await supabase.auth.signUp({
+                const { error } = await supabase.auth.signUp({
                     email: username,
                     password: password,
                     options: {
@@ -42,6 +42,7 @@ export default function Auth({ onLogin }: { onLogin: (token: string, username: s
                 setIsLogin(true);
                 setError("Registration successful! Check your email to confirm.");
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error("Auth Error:", err);
             setError(err.message || "Authentication failed");

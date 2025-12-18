@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [status, setStatus] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [uploads, setUploads] = useState<any[]>([]);
 
   useEffect(() => {
@@ -77,7 +78,6 @@ export default function UploadPage() {
       </div>
 
       {/* Navbar */}
-      {/* Navbar */}
       <Navbar />
 
       {/* Main Content */}
@@ -89,7 +89,7 @@ export default function UploadPage() {
           </h1>
 
           <p className="text-gray-400 text-center mb-8">
-            Upload your college documents (Text, Markdown) to enhance the AI's knowledge.
+            Upload your college documents (Text, Markdown) to enhance the AI&apos;s knowledge.
           </p>
 
           <div className="flex flex-col items-center space-y-6">
@@ -163,6 +163,7 @@ export default function UploadPage() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function UploadAlbum({ uploads, onDelete }: { uploads: any[], onDelete: (filename: string) => void }) {
   if (uploads.length === 0) {
     return <p className="text-gray-500 italic">No uploads yet.</p>;

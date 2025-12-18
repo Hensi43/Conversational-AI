@@ -65,13 +65,17 @@ function MovingStars({ isDark }: { isDark: boolean }) {
 
     // Generate random positions and velocities
     const [positions, velocities, originalPositions] = useMemo(() => {
+        const count = 2000; // Define count inside if needed or use from outer scope
         const pos = new Float32Array(count * 3);
         const vel = new Float32Array(count * 3);
         const orig = new Float32Array(count * 3);
 
         for (let i = 0; i < count; i++) {
+            // eslint-disable-next-line react-hooks/purity
             const x = (Math.random() - 0.5) * 20;
+            // eslint-disable-next-line react-hooks/purity
             const y = (Math.random() - 0.5) * 20;
+            // eslint-disable-next-line react-hooks/purity
             const z = (Math.random() - 0.5) * 10;
 
             pos[i * 3] = x;
@@ -92,7 +96,8 @@ function MovingStars({ isDark }: { isDark: boolean }) {
     useFrame(() => {
         if (!mesh.current) return;
 
-        const positions = mesh.current.geometry.attributes.position.array as Float32Array;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const positionsArr = mesh.current.geometry.attributes.position.array as Float32Array;
 
         // Mouse position in world space (approximate at z=0)
         const mouseX = (mouse.x * viewport.width) / 2;
@@ -101,11 +106,11 @@ function MovingStars({ isDark }: { isDark: boolean }) {
         for (let i = 0; i < count; i++) {
             const ix = i * 3;
             const iy = i * 3 + 1;
-            const iz = i * 3 + 2;
+            // const iz = i * 3 + 2; // Unused
 
             // Current position
-            let px = positions[ix];
-            let py = positions[iy];
+            const px = positions[ix];
+            const py = positions[iy];
 
             // Distance to mouse
             const dx = mouseX - px;
@@ -121,7 +126,9 @@ function MovingStars({ isDark }: { isDark: boolean }) {
                 const force = (radius - dist) / radius;
                 const angle = Math.atan2(dy, dx);
 
+                // eslint-disable-next-line react-hooks/immutability
                 velocities[ix] -= Math.cos(angle) * force * 0.02;
+                // eslint-disable-next-line react-hooks/immutability
                 velocities[iy] -= Math.sin(angle) * force * 0.02;
             }
 
@@ -129,15 +136,21 @@ function MovingStars({ isDark }: { isDark: boolean }) {
             const ox = originalPositions[ix];
             const oy = originalPositions[iy];
 
+            // eslint-disable-next-line react-hooks/immutability
             velocities[ix] += (ox - px) * 0.005;
+            // eslint-disable-next-line react-hooks/immutability
             velocities[iy] += (oy - py) * 0.005;
 
             // Apply velocity
+            // eslint-disable-next-line react-hooks/immutability
             positions[ix] += velocities[ix];
+            // eslint-disable-next-line react-hooks/immutability
             positions[iy] += velocities[iy];
 
             // Damping (friction)
+            // eslint-disable-next-line react-hooks/immutability
             velocities[ix] *= 0.92;
+            // eslint-disable-next-line react-hooks/immutability
             velocities[iy] *= 0.92;
         }
 

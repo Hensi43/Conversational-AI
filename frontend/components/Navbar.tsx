@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 
-export function Navbar() {
+export function Navbar({ onHistoryClick }: { onHistoryClick?: () => void }) {
     return (
-        <nav className="relative z-20 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-            <div className="text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-                ORION
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto w-full pointer-events-none">
+            <div className="pointer-events-auto">
+                <button
+                    onClick={onHistoryClick}
+                    className="text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] hover:opacity-80 transition-opacity"
+                >
+                    ORION
+                </button>
             </div>
-            <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide">
+            <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide pointer-events-auto">
                 {["Home", "Upload", "Quiz", "Profile"].map((item) => (
                     <Link
                         key={item}

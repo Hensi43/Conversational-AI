@@ -15,10 +15,19 @@ def generate_quiz(req: QuizRequest):
     
     prompt = f"""
     Based on the following context, generate a quiz with 5 multiple-choice questions about "{req.topic}".
-    Format the output as a JSON list of objects, where each object has:
-    - "question": The question text
-    - "options": A list of 4 options
-    - "answer": The correct option
+    
+    IMPORTANT: Return ONLY a JSON list of objects. Do not include any other text, explanations, or markdown formatting (like ```json).
+    
+    Format:
+    [
+      {{
+        "question": "Question text",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "Option B" 
+      }}
+    ]
+    
+    Constraint: The "answer" field MUST be an exact string copy of one of the items in the "options" list.
     
     Context:
     {context}
@@ -26,19 +35,21 @@ def generate_quiz(req: QuizRequest):
     
     try:
         response = ask_llm(prompt)
-        # Basic parsing (assuming LLM returns valid JSON or close to it)
-        # In a production app, we'd use structured output or more robust parsing
-        import json
-        import re
+        print(f"LLM Response for Quiz: {response}") # Debug log
         
-        # Extract JSON from response if wrapped in code blocks
-        match = re.search(r'```json\n(.*?)\n```', response, re.DOTALL)
-        if match:
-            json_str = match.group(1)
-        else:
-            json_str = response
-            
+        # Clean up response
+        json_str = response.strip()
+        if json_str.startswith("```json"):
+            json_str = json_str[7:]
+        if json_str.endswith("```"):
+            json_str = json_str[:-3]
+        
+        json_str = json_str.strip()
+        
+        import json
         quiz_data = json.loads(json_str)
         return {"quiz": quiz_data}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Quiz Generation Error: {e}")
+        print(f"Raw Response: {response}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate quiz: {str(e)}")

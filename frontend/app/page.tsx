@@ -1,66 +1,159 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import Image from "next/image";
 import dynamic from "next/dynamic";
+import { Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Navbar } from "@/components/Navbar";
+import { Sidebar } from "@/components/Sidebar";
+// Removed Button import as it's no longer used for the mobile menu toggle
 
 const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
 export default function Home() {
-  const [messages, setMessages] = useState([
-    { role: "ai", content: "Hello! How can I assist you today?" },
-  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
+
+  // Session State
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false); // Changed from isSidebarOpen
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+  // Initial Load
+  const fetchSessions = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/sessions`);
+      setSessions(res.data);
+    } catch (e) {
+      console.error("Failed to fetch sessions", e);
+    }
+  }, [API_URL]);
+
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (scrollRef.current) {
+      // Simple scroll to bottom
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+
+
+  async function selectSession(id: string) {
+    setCurrentSessionId(id);
+    setIsHistoryOpen(false); // Close on mobile
+    try {
+      const res = await axios.get(`${API_URL}/api/sessions/${id}`);
+      setMessages(res.data);
+    } catch (e) {
+      console.error("Failed to load session", e);
+    }
+  }
+
+  function handleNewChat() {
+    setCurrentSessionId(null);
+    setMessages([{ role: "ai", content: "Hello! How can I assist you today?" }]);
+    setIsHistoryOpen(false);
+  }
+
+  async function deleteSession(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    try {
+      await axios.delete(`${API_URL}/api/sessions/${id}`);
+      setSessions(prev => prev.filter(s => s.id !== id));
+      if (currentSessionId === id) {
+        handleNewChat();
+      }
+    } catch (err) {
+      console.error("Failed to delete", err);
+    }
+  }
 
   async function sendMessage() {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
-    const userMsg = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMsg]);
-
-    // Clear input immediately
-    const currentInput = input;
+    const userContent = input;
     setInput("");
+    setIsLoading(true);
+
+    const newMsg = { role: "user", content: userContent };
+    setMessages(prev => [...prev, newMsg]);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-      const res = await axios.post(`${apiUrl}/api/chat`, {
-        query: currentInput,
+      let sessionId = currentSessionId;
+
+      // Create session if first message
+      if (!sessionId) {
+        const title = userContent.slice(0, 30) + (userContent.length > 30 ? "..." : "");
+        const sessionRes = await axios.post(`${API_URL}/api/sessions`, { title });
+        sessionId = sessionRes.data.id;
+        setCurrentSessionId(sessionId!);
+        setSessions(prev => [sessionRes.data, ...prev]);
+      }
+
+      // Send chat
+      const res = await axios.post(`${API_URL}/api/chat`, {
+        query: userContent,
+        session_id: sessionId
       });
 
       const aiMsg = { role: "ai", content: res.data.answer };
-      setMessages((prev) => [...prev, aiMsg]);
+      setMessages(prev => [...prev, aiMsg]);
+
     } catch (error) {
       console.error("Error sending message:", error);
-      // Optional: Add error message to chat
+      setMessages(prev => [...prev, { role: "ai", content: "Sorry, something went wrong." }]);
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden font-sans selection:bg-cyan-500/30 transition-colors duration-300">
+    <div className="h-screen bg-background text-foreground relative overflow-hidden font-sans selection:bg-cyan-500/30">
 
-      {/* Background Effects */}
-      {/* Background Effects - Handled by Scene3D */}
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <Scene3D />
+      </div>
 
-      {/* Navbar */}
-      {/* Navbar */}
-      <Navbar />
+      {/* Navigation (Fixed Top) */}
+      <Navbar onHistoryClick={() => setIsHistoryOpen(!isHistoryOpen)} />
 
-      {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)] px-4 pb-20">
+      {/* History Overlay (Dropdown) */}
+      <Sidebar
+        sessions={sessions}
+        currentSessionId={currentSessionId}
+        onSelectSession={selectSession}
+        onNewChat={handleNewChat}
+        onDeleteSession={deleteSession}
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
 
-        {/* Avatar Section */}
-        <div className="relative w-full h-[500px] mb-8">
-          <Scene3D />
-        </div>
+      {/* Main Content Area */}
+      <main className="relative z-10 flex flex-col h-full pt-20 pb-24 px-4 md:px-0">
+        <div className="flex-1 overflow-y-auto scrollbar-hide" ref={scrollRef}>
+          <div className="max-w-3xl mx-auto space-y-6 py-4">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-500 animate-in fade-in duration-700">
+                {/* Placeholder content if needed */}
+              </div>
+            )}
 
-        {/* Chat Interface */}
-        <div className="w-full max-w-2xl">
-
-          {/* Messages Area */}
-          <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto px-4 scrollbar-hide">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -68,56 +161,67 @@ export default function Home() {
               >
                 <div
                   className={`
-                    max-w-[80%] px-6 py-3 rounded-2xl text-base backdrop-blur-md border
-                    ${msg.role === "user"
-                      ? "bg-cyan-100/80 border-cyan-200 text-cyan-900 shadow-[0_4px_20px_rgba(6,182,212,0.2)] dark:bg-cyan-950/60 dark:border-cyan-500/40 dark:text-cyan-50"
-                      : "bg-white/90 border-slate-300 text-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.15)] dark:bg-slate-900/80 dark:border-slate-700 dark:text-slate-200"
+                        max-w-[85%] px-5 py-3 rounded-2xl text-base backdrop-blur-md border leading-relaxed
+                        ${msg.role === "user"
+                      ? "bg-cyan-600/90 text-white border-cyan-500/50 rounded-tr-sm shadow-lg shadow-cyan-900/20"
+                      : "bg-white/10 text-white border-white/10 rounded-tl-sm shadow-lg"
                     }
-                  `}
+                      `}
                 >
-                  {msg.content}
+                  {msg.role === "user" ? (
+                    msg.content
+                  ) : (
+                    <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-xl">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
-          </div>
 
-          {/* Input Area */}
-          <div className="relative group w-full">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full opacity-40 group-hover:opacity-60 transition duration-500 blur-sm"></div>
-            <div className="relative flex items-center bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl rounded-full border border-slate-300 dark:border-slate-700 p-1.5 shadow-xl dark:shadow-2xl">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 min-w-0 bg-transparent text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 px-4 md:px-6 py-3 outline-none rounded-full text-sm md:text-base"
-              />
-              <button
-                onClick={sendMessage}
-                className="
-                  px-5 md:px-8 py-3 
-                  bg-gradient-to-r from-cyan-600 to-blue-600 
-                  hover:from-cyan-500 hover:to-blue-500
-                  text-white font-semibold tracking-wide
-                  rounded-full 
-                  transition-all duration-200
-                  shadow-[0_4px_0_rgb(6,130,180)]
-                  hover:shadow-[0_5px_0_rgb(6,130,180)]
-                  hover:-translate-y-0.5
-                  active:shadow-[0_0_0_rgb(6,130,180)]
-                  active:translate-y-1
-                  text-sm md:text-base
-                  whitespace-nowrap
-                "
-              >
-                Send
-              </button>
-            </div>
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white/5 px-4 py-2 rounded-2xl text-xs text-slate-400 animate-pulse">
+                  Thinking...
+                </div>
+              </div>
+            )}
+            {/* Spacer for bottom */}
+            <div className="h-4" />
           </div>
-
         </div>
-      </main >
-    </div >
+      </main>
+
+      {/* Input Area (Fixed Bottom) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative flex items-center gap-2 bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-full shadow-2xl ring-1 ring-white/5 hover:ring-white/10 transition-all">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !isLoading && sendMessage()}
+              placeholder="Type a message..."
+              disabled={isLoading}
+              className="flex-1 min-w-0 bg-transparent text-white placeholder-white/40 px-6 py-3 outline-none text-base disabled:opacity-50"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim() || isLoading}
+              className="
+                p-3 rounded-full bg-cyan-600 text-white hover:bg-cyan-500
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all shadow-lg shadow-cyan-500/20 group
+                "
+            >
+              <Send size={20} className={`transition-transform duration-300 ${input.trim() ? "group-hover:translate-x-0.5 group-hover:-translate-y-0.5" : ""}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   );
 }

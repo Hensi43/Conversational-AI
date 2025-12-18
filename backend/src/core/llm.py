@@ -34,7 +34,7 @@ def ask_llm(prompt: str):
     return "Sorry, I am currently unable to generate a response due to server issues."
 
 def ask_llm_vision(prompt: str, image_url: str):
-    model = "meta-llama/llama-4-scout-17b-16e-instruct"
+    model = "llama-3.2-11b-vision-preview" 
     try:
         print(f"Trying vision model: {model}")
         response = client.chat.completions.create(
@@ -57,5 +57,4 @@ def ask_llm_vision(prompt: str, image_url: str):
         return response.choices[0].message.content
     except Exception as e:
         print(f"Vision model {model} failed: {e}")
-        # Fallback or re-raise with more info
-        raise e
+        return "Image description unavailable due to processing error."

@@ -6,8 +6,9 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     query: str
+    session_id: str = None
 
 @router.post("/chat")
 def chat_endpoint(request: ChatRequest):
-    answer = handle_chat(request.query)
+    answer = handle_chat(request.query, request.session_id)
     return {"answer": answer}

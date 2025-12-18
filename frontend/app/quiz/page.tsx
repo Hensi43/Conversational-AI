@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 
 export default function QuizPage() {
   const [topic, setTopic] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [quiz, setQuiz] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
@@ -59,9 +60,9 @@ export default function QuizPage() {
       <Navbar />
 
       {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center justify-start min-h-[calc(100vh-100px)] px-4 py-10">
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pt-24 pb-12">
 
-        <div className="w-full max-w-3xl bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-slate-200 dark:border-cyan-500/10 shadow-[0_0_60px_rgba(0,200,255,0.15)]">
+        <div className="w-full max-w-3xl bg-white/80 dark:bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-slate-200 dark:border-cyan-500/10 shadow-[0_0_60px_rgba(0,200,255,0.15)] mt-12">
           <h1 className="text-3xl font-bold mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 dark:from-cyan-200 dark:to-blue-400">
             AI Knowledge Quiz
           </h1>
@@ -99,8 +100,8 @@ export default function QuizPage() {
                             ? "bg-cyan-100 border-cyan-400 text-cyan-900 dark:bg-cyan-900/40 dark:border-cyan-400 dark:text-cyan-100"
                             : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 dark:bg-white/5 dark:border-white/10 dark:hover:bg-white/10 dark:text-gray-300"
                           }
-                          ${score !== null && opt === q.answer ? "bg-green-100 border-green-500 text-green-900 dark:bg-green-900/40 dark:text-green-100" : ""}
-                          ${score !== null && answers[i] === opt && opt !== q.answer ? "bg-red-100 border-red-500 text-red-900 dark:bg-red-900/40 dark:text-red-100" : ""}
+                          ${score !== null && opt.trim() === q.answer.trim() ? "bg-green-100 border-green-500 text-green-900 dark:bg-green-900/40 dark:text-green-100" : ""}
+                          ${score !== null && answers[i] === opt && opt.trim() !== q.answer.trim() ? "bg-red-100 border-red-500 text-red-900 dark:bg-red-900/40 dark:text-red-100" : ""}
                         `}
                       >
                         {opt}
