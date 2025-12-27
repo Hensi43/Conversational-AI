@@ -26,7 +26,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def home():
-    return {"status": "OpenAI RAG server running"}
+    return {"status": "Groq/Supabase RAG server running"}
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")

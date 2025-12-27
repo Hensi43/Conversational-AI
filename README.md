@@ -1,54 +1,47 @@
 # Conversational AI Education Platform
 
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Next.js](https://img.shields.io/badge/FrontEnd-Next.js-black)
+![FastAPI](https://img.shields.io/badge/BackEnd-FastAPI-teal)
+![Groq](https://img.shields.io/badge/AI-Groq-orange)
+![Supabase](https://img.shields.io/badge/Database-Supabase-green)
+
 A futuristic educational platform featuring an AI chatbot with RAG capabilities, file uploads, and quizzes.
 
-## Features
+## 📚 Documentation
 
-- **AI Chatbot**: Powered by Groq (Llama 3) for intelligent responses.
+Detailed documentation is available in the following files:
+
+- **[Quick Start Guide](QUICK_START.md)**: Steps to get the app running locally.
+- **[Architecture Design](ARCHITECTURE_DESIGN.md)**: System diagrams and data flow.
+- **[Feature Inventory](FEATURE_INVENTORY.md)**: Checklist of implemented features.
+- **[Testing Guide](TESTING_GUIDE.md)**: How to verify system functionality.
+
+## 🚀 Features
+
+- **AI Chatbot**: Powered by Groq (Llama 3) for intelligent, context-aware responses.
 - **RAG System**: Upload documents (PDF, TXT, MD, Images) to enhance the AI's knowledge.
-- **File Management**: Upload, preview, and delete files.
-- **Quiz System**: Interactive quizzes generated from uploaded content (In Progress).
-- **Futuristic UI**: Built with Next.js and Tailwind CSS.
+- **Image Analysis**: Uses Llama 3.2 Vision to "see" and describe uploaded images.
+- **File Management**: Upload, preview, and manage your knowledge base.
+- **Modern UI**: Built with Next.js 16 and Tailwind CSS 4.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Frontend**: Next.js, Tailwind CSS, Axios
-- **Backend**: FastAPI, LangChain, ChromaDB (In-memory), Groq API
+### Frontend
+- **Framework**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS 4
+- **State**: React Hooks + Axios
+- **Visuals**: Framer Motion, Three.js (Drei)
 
-## Getting Started
+### Backend
+- **Framework**: FastAPI
+- **AI Engine**: Groq (Llama 3.3 / Llama 3.2 Vision)
+- **Vector Store**: Supabase (pgvector)
+- **Embeddings**: FastEmbed
+- **Storage**: Supabase Storage
 
-### Prerequisites
+## ⚡ Deployment
 
-- Node.js
-- Python 3.10+
-- Groq API Key
+See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment instructions.
 
-### Installation
-
-1.  Clone the repository.
-2.  **Backend**:
-    ```bash
-    cd backend
-    python -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    ```
-    Create a `.env` file in `backend/` with:
-    ```
-    GROQ_API_KEY=your_api_key_here
-    ```
-    Run the server:
-    ```bash
-    uvicorn src.main:app --reload --port 8001
-    ```
-
-3.  **Frontend**:
-    ```bash
-    cd frontend
-    npm install
-    npm run dev
-    ```
-
-## Deployment
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions.
+> **Note**: If you see deployment failures in Render/Vercel, ensure all Environment Variables (groq_api_key, supabase credentials) are correctly set in the dashboard.
