@@ -1,69 +1,53 @@
-# Conversational AI Education Platform
+# 🤖 Conversational AI Education Platform
 
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Next.js](https://img.shields.io/badge/FrontEnd-Next.js-black)
-![FastAPI](https://img.shields.io/badge/BackEnd-FastAPI-teal)
-![Groq](https://img.shields.io/badge/AI-Groq-orange)
-![Supabase](https://img.shields.io/badge/Database-Supabase-green)
+> A futuristic educational platform featuring an AI chatbot with RAG capabilities, file uploads, and quizzes.
 
-A futuristic educational platform featuring an AI chatbot with RAG capabilities, file uploads, and quizzes.
+![Project Status](https://img.shields.io/badge/Status-Active-success)
+![Tech Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20FastAPI%20%7C%20Supabase-blue)
 
----
+## 📚 DOCUMENTATION
 
-## 🚀 Quick Start
-*Full guide: [QUICK_START.md](QUICK_START.md)*
+We follow a systematic documentation approach.
 
-1. **Backend**: 
-   ```bash
-   cd backend && python -m venv venv && source venv/bin/activate
-   pip install -r requirements.txt
-   # Set GROQ_API_KEY & SUPABASE credentials in .env
-   uvicorn src.main:app --reload --port 8000
-   ```
-2. **Frontend**:
-   ```bash
-   cd frontend && npm install
-   npm run dev
-   # App runs at http://localhost:3000
-   ```
+### 1. [📐 ARCHITECTURE DESIGN](./ARCHITECTURE_DESIGN.md)
+> **System Overview**: Next.js UI <-> FastAPI Backend <-> Supabase Vector Store & Groq AI.
 
----
+```mermaid
+graph TD
+    User((👤 User)) -->|UI| Frontend[Next.js App]
+    Frontend -->|HTTP| Backend[FastAPI Service]
+    Backend <-->|SQL/Vector| DB[(Supabase)]
+    Backend <-->|Inference| AI[Groq Llama 3]
+```
 
-## 🏗️ Architecture
-*Full design: [ARCHITECTURE_DESIGN.md](ARCHITECTURE_DESIGN.md)*
+### 2. [⚡ QUICK START](./QUICK_START.md)
+**Backend**:
+```bash
+source backend/venv/bin/activate && pip install -r backend/requirements.txt
+uvicorn src.main:app --app-dir backend --reload --port 8000
+```
+**Frontend**:
+```bash
+cd frontend && npm install
+npm run dev
+```
 
-The system uses a **Decoupled Architecture**:
-- **Frontend**: Next.js 16 (App Router) for a responsive UI.
-- **Backend**: FastAPI services handling logic and AI orchestration.
-- **RAG Pipeline**: 
-  - **Ingest**: Uploads -> PDF/Image Parsing -> Chunking -> Supabase Vector Store.
-  - **Retrieve**: User Query -> Vector Search -> Context + Prompt -> Groq (Llama 3).
+### 3. [✅ FEATURE INVENTORY](./FEATURE_INVENTORY.md)
+- [x] **RAG Pipeline** (PDF/Text/Image Ingestion)
+- [x] **AI Chat** (Context-aware Llama 3)
+- [x] **Vision Analysis** (Image description via Llama 3.2)
+- [ ] **Quiz Generation** (In Progress)
 
----
+### 4. [🧪 TESTING GUIDE](./TESTING_GUIDE.md)
+- **Health Check**: `http://localhost:8000`
+- **Manual**: Upload PDF -> Ask Question -> Verify Context Usage.
 
-## ✨ Features
-*Full list: [FEATURE_INVENTORY.md](FEATURE_INVENTORY.md)*
 
-- **AI Chatbot**: Context-aware conversations with Llama 3.
-- **RAG System**: "Chat with your data" using PDF/Text uploads.
-- **Vision Integration**: Upload images; the AI uses Llama 3.2 Vision to "see" them.
-- **Modern UI**: Dark mode, drag-and-drop, and markdown rendering.
+## 🚀 OVERVIEW
 
----
+The **Study Buddy** allows students to upload their study materials and interact with an AI that "knows" their documents.
 
-## 🧪 Testing & Verification
-*Full guide: [TESTING_GUIDE.md](TESTING_GUIDE.md)*
-
-- **Health Check**: Visit `http://localhost:8000` -> `{"status": "Groq/Supabase RAG server running"}`.
-- **Upload Test**: Upload a PDF. Check console for "Embedding..." logs.
-- **Chat Test**: Ask questions about the specific content you just uploaded.
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js, Tailwind CSS 4, Axios, Framer Motion
-- **Backend**: FastAPI, Groq API, Supabase (pgvector + Storage)
-- **Deployment**: Configured for Vercel (Frontend) and Render (Backend).
-
-> **Note**: For production deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+### Key Features
+-   **Chat with Data**: RAG system retrieves relevant context from uploaded files.
+-   **Visual Intelligence**: Can analyze and describe uploaded images/diagrams.
+-   **Modern Stack**: Built with Next.js 16, Tailwind 4, and FastAPI.
