@@ -40,7 +40,9 @@ async def process_deployment(file: UploadFile, content: bytes, user_id: str = No
             text = f"Filename: {file.filename}\nContent:\n{content.decode('utf-8')}"
         
         # 2. Upload to Supabase Storage
-        file_path = f"{uuid.uuid4()}-{file.filename}"
+        import re
+        sanitized_filename = re.sub(r'[^a-zA-Z0-9.-]', '_', file.filename)
+        file_path = f"{uuid.uuid4()}-{sanitized_filename}"
         supabase.storage.from_("uploads").upload(
             file=content,
             path=file_path,
